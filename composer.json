@@ -1,0 +1,32 @@
+{
+    "name": "datashaman/laravel-conditional",
+    "description": ":package_description",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "datashaman",
+            "email": "marlinf@datashaman.com",
+            "homepage": "https://github.com/datashaman"
+        }
+    ],
+    "homepage": "https://github.com/datashaman/laravel-conditional",
+    "keywords": ["Laravel", "LaravelConditional"],
+    "require": {
+        "illuminate/support": "~9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~9",
+        "orchestra/testbench": "~7",
+        "nunomaduro/collision": "^6.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Datashaman\\LaravelConditional\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Datashaman\\LaravelConditional\\Tests\\": "tests/"
+        }
+    }
+}
