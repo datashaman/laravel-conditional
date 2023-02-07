@@ -3,8 +3,9 @@
 namespace Datashaman\LaravelConditional\Tests;
 
 use Illuminate\Contracts\Http\Kernel as KernelContract;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
-abstract class TestCase extends \Orchestra\Testbench\TestCase
+abstract class TestCase extends OrchestraTestCase
 {
     /**
      * Define routes setup.
