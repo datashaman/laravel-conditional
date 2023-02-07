@@ -46,4 +46,4 @@ jobs:
         run: vendor/bin/tlint
 
       - name: Run Tests
-        run: testbench package:test --coverage-text
+        run: vendor/bin/testbench package:test --coverage-text
