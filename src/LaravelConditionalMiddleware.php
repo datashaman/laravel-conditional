@@ -24,8 +24,8 @@ class LaravelConditionalMiddleware
                 throw new Exception('Routes must be defined in a definition');
             }
 
-            foreach ($routes as $route) {
-                $this->resolverIndex[$route] = $definition;
+            foreach ($routes as $routeName) {
+                $this->resolverIndex[$routeName] = $definition;
             }
         }
     }
@@ -39,13 +39,14 @@ class LaravelConditionalMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $route = $request->route()?->getName();
+        $route = $request->route();
+        $routeName = $route ? $route->getName() : '';
 
-        if (!$route) {
+        if (!$routeName) {
             return $next($request);
         }
 
-        $definition = Arr::get($this->resolverIndex, $route);
+        $definition = Arr::get($this->resolverIndex, $routeName);
 
         if (!$definition) {
             return $next($request);

@@ -17,7 +17,6 @@ class Kernel extends HttpKernel
     protected $middleware = [
         // Middleware\TrustHosts::class,
         // Middleware\TrustProxies::class,
-        \Orchestra\Testbench\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \Orchestra\Testbench\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
