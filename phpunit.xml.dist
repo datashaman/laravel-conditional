@@ -12,14 +12,17 @@
     processIsolation="false"
     stopOnFailure="false"
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
-  <coverage>
+<coverage>
     <include>
-      <directory>src/</directory>
+        <directory>src/</directory>
     </include>
-  </coverage>
-  <testsuites>
+</coverage>
+<testsuites>
     <testsuite name="Package">
-      <directory suffix=".php">./tests/</directory>
+        <directory suffix=".php">./tests/</directory>
     </testsuite>
-  </testsuites>
+</testsuites>
+<php>
+    <env name="APP_KEY" value="AckfSECXIvnK5r28GVIWUAxmbBSjTsmF"/>
+</php>
 </phpunit>

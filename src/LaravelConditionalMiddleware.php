@@ -3,10 +3,11 @@
 namespace Datashaman\LaravelConditional;
 
 use Closure;
+use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
-abstract class LaravelConditionalMiddleware
+class LaravelConditionalMiddleware
 {
     protected array $resolverIndex = [];
 
@@ -14,9 +15,17 @@ abstract class LaravelConditionalMiddleware
     {
         $this->resolverIndex = [];
 
-        foreach ($this->resolvers as $resolver => $routeNames) {
-            foreach ($routeNames as $routeName) {
-                $this->resolverIndex[$routeName] = $resolver;
+        foreach (config('laravel-conditional.definitions') as $definition) {
+            if (Arr::has($definition, 'route')) {
+                $routes = [$definition['route']];
+            } else if (Arr::has($definition, 'routes')) {
+                $routes = (array) $definition['routes'];
+            } else {
+                throw new Exception('Routes must be defined in a definition');
+            }
+
+            foreach ($routes as $route) {
+                $this->resolverIndex[$route] = $definition;
             }
         }
     }
@@ -30,38 +39,48 @@ abstract class LaravelConditionalMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $routeName = $request->route()->getName();
+        $route = $request->route()?->getName();
 
-        if (!Arr::has($this->resolverIndex, $routeName)) {
+        if (!$route) {
             return $next($request);
         }
 
-        $resolver = resolve($this->resolverIndex[$routeName]);
+        $definition = Arr::get($this->resolverIndex, $route);
 
-        $lastModified = $resolver($request);
-
-        $ifModifiedSinceHeader = $request->header('If-Modified-Since');
-        $ifUnmodifiedSinceHeader = $request->header('If-Unmodified-Since');
-
-        if ($ifModifiedSinceHeader) {
-            $ifModifiedSince = Carbon::parse($ifModifiedSinceHeader);
-
-            if ($lastModified <= $ifModifiedSince) {
-                abort(304);
-            }
+        if (!$definition) {
+            return $next($request);
         }
 
-        if ($ifUnmodifiedSinceHeader) {
-            $ifUnmodifiedSince = Carbon::parse($ifUnmodifiedSinceHeader);
+        if (Arr::has($definition, 'last_modified')) {
+            $resolver = resolve($definition['last_modified']);
 
-            if ($lastModified > $ifUnmodifiedSince) {
-                abort(412);
+            $lastModified = $resolver->resolve($request);
+
+            $ifModifiedSinceHeader = $request->header('If-Modified-Since');
+            $ifUnmodifiedSinceHeader = $request->header('If-Unmodified-Since');
+
+            if ($ifModifiedSinceHeader) {
+                $ifModifiedSince = Carbon::parse($ifModifiedSinceHeader);
+
+                if ($lastModified <= $ifModifiedSince) {
+                    abort(304);
+                }
+            }
+
+            if ($ifUnmodifiedSinceHeader) {
+                $ifUnmodifiedSince = Carbon::parse($ifUnmodifiedSinceHeader);
+
+                if ($lastModified > $ifUnmodifiedSince) {
+                    abort(412);
+                }
             }
         }
 
         $response = $next($request);
 
-        $response->header('Last-Modified', $lastModified->toRfc7231String());
+        if (Arr::has($definition, 'last_modified')) {
+            $response->header('Last-Modified', $lastModified->toRfc7231String());
+        }
 
         foreach ($this->getHeaders() as $key => $value) {
             $response->header($key, $value);
