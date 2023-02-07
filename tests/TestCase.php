@@ -8,20 +8,6 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 abstract class TestCase extends OrchestraTestCase
 {
     /**
-     * Define routes setup.
-     *
-     * @param  \Illuminate\Routing\Router  $router
-     *
-     * @return void
-     */
-    protected function defineRoutes($router)
-    {
-        $router->get('/test', function () {
-            TestEvent::dispatch();
-        })->name('test')->middleware('web');
-    }
-
-    /**
      * Define environment setup.
      *
      * @param  \Illuminate\Foundation\Application  $app
@@ -30,21 +16,6 @@ abstract class TestCase extends OrchestraTestCase
     protected function defineEnvironment($app)
     {
         $app->setBasePath(__DIR__ . '/..');
-
-        $app['config']->set('laravel-conditional', [
-            'definitions' => [
-                [
-                    'headers' => [
-                    ],
-                    'etag' => ETagResolver::class,
-                    'last_modified' => LastModifiedResolver::class,
-                    'routes' => 'test',
-                ],
-            ],
-
-            'headers' => [
-            ],
-        ]);
     }
 
     /**

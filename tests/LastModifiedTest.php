@@ -9,13 +9,6 @@ use Mockery\MockInterface;
 
 class LastModifiedTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Event::fake();
-    }
-
     public function testNoHeader()
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
@@ -52,6 +45,46 @@ class LastModifiedTest extends TestCase
         $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Event::fake();
+    }
+
+    /**
+     * Define environment setup.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return void
+     */
+    protected function defineEnvironment($app)
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('laravel-conditional', [
+            'definitions' => [
+                [
+                    'last_modified' => LastModifiedResolver::class,
+                    'routes' => 'test',
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Define routes setup.
+     *
+     * @param  \Illuminate\Routing\Router  $router
+     *
+     * @return void
+     */
+    protected function defineRoutes($router)
+    {
+        $router->get('/test', function () {
+            TestEvent::dispatch();
+        })->name('test')->middleware('web');
     }
 
     public function returnLastModified(string $lastModified): Carbon

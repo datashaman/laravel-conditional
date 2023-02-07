@@ -46,4 +46,4 @@ jobs:
         run: vendor/bin/tlint
 
       - name: Run Tests
-        run: vendor/bin/phpunit --coverage-text
+        run: testbench package:test --coverage-text
