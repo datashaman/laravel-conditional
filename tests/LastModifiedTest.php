@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\MockInterface;
 
-class BasicTest extends TestCase
+class LastModifiedTest extends TestCase
 {
     protected function setUp(): void
     {
