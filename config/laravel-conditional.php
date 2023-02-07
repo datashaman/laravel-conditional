@@ -1,8 +1,5 @@
 <?php
 
-use Datashaman\LaravelConditional\Resolvers\ETagResolver;
-use Datashaman\LaravelConditional\Resolvers\LastModifiedResolver;
-
 return [
     /*
     'definitions' => [
