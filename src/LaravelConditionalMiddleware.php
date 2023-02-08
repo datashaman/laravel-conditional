@@ -4,6 +4,7 @@ namespace Datashaman\LaravelConditional;
 
 use Closure;
 use Exception;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
@@ -41,18 +42,11 @@ class LaravelConditionalMiddleware
     {
         $route = $request->route();
         $routeName = $route ? $route->getName() : '';
+        $definition = $routeName ? Arr::get($this->resolverIndex, $routeName) : [];
 
-        if (!$routeName) {
-            return $next($request);
-        }
+        $processLastModified = Arr::has($definition, 'last_modified');
 
-        $definition = Arr::get($this->resolverIndex, $routeName);
-
-        if (!$definition) {
-            return $next($request);
-        }
-
-        if (Arr::has($definition, 'last_modified')) {
+        if ($processLastModified) {
             $resolver = resolve($definition['last_modified']);
 
             $lastModified = $resolver->resolve($request);
@@ -64,7 +58,7 @@ class LaravelConditionalMiddleware
                 $ifModifiedSince = Carbon::parse($ifModifiedSinceHeader);
 
                 if ($lastModified <= $ifModifiedSince) {
-                    abort(304);
+                    return response('', Response::HTTP_NOT_MODIFIED);
                 }
             }
 
@@ -72,27 +66,17 @@ class LaravelConditionalMiddleware
                 $ifUnmodifiedSince = Carbon::parse($ifUnmodifiedSinceHeader);
 
                 if ($lastModified > $ifUnmodifiedSince) {
-                    abort(412);
+                    return response('', Response::HTTP_PRECONDITION_FAILED);
                 }
             }
         }
 
         $response = $next($request);
 
-        if (Arr::has($definition, 'last_modified')) {
+        if ($processLastModified) {
             $response->header('Last-Modified', $lastModified->toRfc7231String());
         }
 
-        foreach ($this->getHeaders() as $key => $value) {
-            $response->header($key, $value);
-        }
-
         return $response;
-    }
-
-    protected function getHeaders()
-    {
-        return [
-        ];
     }
 }
