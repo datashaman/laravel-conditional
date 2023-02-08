@@ -16,6 +16,7 @@ class IfUnmodifiedSinceTest extends TestCase
             'If-Unmodified-Since' => $lastModified->toRfc7231String(),
         ])->post('/test');
         $response->assertStatus(200);
+        $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
     }
