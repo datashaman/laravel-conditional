@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\MockInterface;
 
-class LastModifiedTest extends TestCase
+class IfModifiedSinceTest extends TestCase
 {
     public function testNoHeader()
     {
