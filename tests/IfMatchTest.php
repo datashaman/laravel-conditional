@@ -38,6 +38,29 @@ class IfMatchTest extends TestCase
         Event::assertDispatched(TestEvent::class);
     }
 
+    public function testGetAny()
+    {
+        $eTag = $this->returnETag('abcdefg');
+        $response = $this->withHeaders([
+            'If-Match' => '*',
+        ])->get('/resource');
+        $response->assertStatus(Response::HTTP_OK);
+
+        Event::assertDispatched(TestEvent::class);
+    }
+
+    public function testGetAnyNoEtag()
+    {
+        $eTag = $this->returnETag(null);
+        $response = $this->withHeaders([
+            'If-Match' => '*',
+        ])->getJson('/resource');
+        $response->dump();
+        $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
+
+        Event::assertNotDispatched(TestEvent::class);
+    }
+
     public function testPutMatch()
     {
         $eTag = $this->returnETag('abcdefg');
@@ -47,6 +70,28 @@ class IfMatchTest extends TestCase
         $response->assertStatus(Response::HTTP_OK);
 
         Event::assertDispatched(TestEvent::class);
+    }
+
+    public function testPutMatchAny()
+    {
+        $eTag = $this->returnETag('abcdefg');
+        $response = $this->withHeaders([
+            'If-Match' => '*',
+        ])->put('/resource');
+        $response->assertStatus(Response::HTTP_OK);
+
+        Event::assertDispatched(TestEvent::class);
+    }
+
+    public function testPutMatchAnyNoEtag()
+    {
+        $eTag = $this->returnETag(null);
+        $response = $this->withHeaders([
+            'If-Match' => '*',
+        ])->put('/resource');
+        $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
+
+        Event::assertNotDispatched(TestEvent::class);
     }
 
     public function testGetNoneMatch()
