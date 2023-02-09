@@ -7,24 +7,47 @@ use Illuminate\Support\Facades\Event;
 
 class IfUnmodifiedSinceTest extends TestCase
 {
-    public function testUnmodified()
+    public function testGetUnmodified()
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
         $response = $this->withHeaders([
             'If-Unmodified-Since' => $lastModified->toRfc7231String(),
-        ])->post('/test');
+        ])->get('/resource');
         $response->assertStatus(Response::HTTP_OK);
         $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
     }
 
-    public function testModified()
+    public function testPutUnmodified()
+    {
+        $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
+        $response = $this->withHeaders([
+            'If-Unmodified-Since' => $lastModified->toRfc7231String(),
+        ])->put('/resource');
+        $response->assertStatus(Response::HTTP_OK);
+        $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
+
+        Event::assertDispatched(TestEvent::class);
+    }
+
+    public function testGetModified()
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
         $response = $this->withHeaders([
             'If-Unmodified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
-        ])->postJson('/test');
+        ])->get('/resource');
+        $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
+
+        Event::assertNotDispatched(TestEvent::class);
+    }
+
+    public function testPutModified()
+    {
+        $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
+        $response = $this->withHeaders([
+            'If-Unmodified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
+        ])->put('/resource');
         $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
 
         Event::assertNotDispatched(TestEvent::class);
@@ -39,28 +62,6 @@ class IfUnmodifiedSinceTest extends TestCase
     protected function defineEnvironment($app)
     {
         parent::defineEnvironment($app);
-
-        $app['config']->set('laravel-conditional', [
-            'definitions' => [
-                [
-                    'last_modified' => LastModifiedResolver::class,
-                    'routes' => 'test',
-                ],
-            ],
-        ]);
-    }
-
-    /**
-     * Define routes setup.
-     *
-     * @param  \Illuminate\Routing\Router  $router
-     *
-     * @return void
-     */
-    protected function defineRoutes($router)
-    {
-        $router->post('/test', function () {
-            TestEvent::dispatch();
-        })->name('test')->middleware('web');
+        $app['config']->set('laravel-conditional.definitions.0.last_modified', LastModifiedResolver::class);
     }
 }
