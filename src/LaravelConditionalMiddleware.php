@@ -118,7 +118,7 @@ class LaravelConditionalMiddleware
         }
 
         $found = collect(explode(',', $header))
-            ->map('trim')
+            ->map(fn ($tag) => trim($tag))
             ->reject(fn ($tag) => Str::startsWith($tag, 'W/'))
             ->map(fn ($tag) => trim($tag, '"'))
             ->search($eTag);
