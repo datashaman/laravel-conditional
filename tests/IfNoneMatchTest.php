@@ -2,6 +2,7 @@
 
 namespace Datashaman\LaravelConditional\Tests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\MockInterface;
@@ -21,9 +22,9 @@ class IfNoneMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->withHeaders([
-            'If-None-Match' => $eTag,
+            'If-None-Match' => json_encode($eTag),
         ])->get('/test');
-        $response->assertStatus(304);
+        $response->assertStatus(Response::HTTP_NOT_MODIFIED);
 
         Event::assertNotDispatched(TestEvent::class);
     }
@@ -32,18 +33,12 @@ class IfNoneMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->withHeaders([
-            'If-None-Match' => '1234567',
+            'If-None-Match' => json_encode('1234567'),
         ])->get('/test');
-        $response->assertStatus(200);
+        $response->assertStatus(Response::HTTP_OK);
         $response->assertHeader('ETag', json_encode($eTag));
 
         Event::assertDispatched(TestEvent::class);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Event::fake();
     }
 
     /**
@@ -78,20 +73,5 @@ class IfNoneMatchTest extends TestCase
         $router->get('/test', function () {
             TestEvent::dispatch();
         })->name('test')->middleware('web');
-    }
-
-    public function returnETag(string $eTag): string
-    {
-        $this->instance(
-            ETagResolver::class,
-            Mockery::mock(ETagResolver::class, function (MockInterface $mock) use ($eTag) {
-                $mock
-                    ->shouldReceive('resolve')
-                    ->once()
-                    ->andReturn($eTag);
-            })
-        );
-
-        return $eTag;
     }
 }

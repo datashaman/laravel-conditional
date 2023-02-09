@@ -2,9 +2,8 @@
 
 namespace Datashaman\LaravelConditional\Tests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
-use Mockery;
-use Mockery\MockInterface;
 
 class IfMatchTest extends TestCase
 {
@@ -13,6 +12,7 @@ class IfMatchTest extends TestCase
         $eTag = $this->returnETag('abcdefg');
         $response = $this->get('/test');
         $response->assertHeader('ETag', json_encode($eTag));
+        $response->assertStatus(Response::HTTP_OK);
 
         Event::assertDispatched(TestEvent::class);
     }
@@ -21,9 +21,9 @@ class IfMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->withHeaders([
-            'If-Match' => $eTag,
+            'If-Match' => json_encode($eTag),
         ])->get('/test');
-        $response->assertStatus(200);
+        $response->assertStatus(Response::HTTP_OK);
 
         Event::assertDispatched(TestEvent::class);
     }
@@ -31,24 +31,12 @@ class IfMatchTest extends TestCase
     public function testNoneMatch()
     {
         $eTag = $this->returnETag('abcdefg');
-
-        $headers = [
-            'If-Match' => '1234567',
-        ];
-
-        $response = $this
-            ->withHeaders($headers)
-            ->get('/test');
-
-        $response->assertStatus(412);
+        $response = $this->withHeaders([
+            'If-Match' => json_encode('1234567'),
+        ])->get('/test');
+        $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
 
         Event::assertNotDispatched(TestEvent::class);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Event::fake();
     }
 
     /**
@@ -83,20 +71,5 @@ class IfMatchTest extends TestCase
         $router->get('/test', function () {
             TestEvent::dispatch();
         })->name('test')->middleware('web');
-    }
-
-    public function returnETag(string $eTag): string
-    {
-        $this->instance(
-            ETagResolver::class,
-            Mockery::mock(ETagResolver::class, function (MockInterface $mock) use ($eTag) {
-                $mock
-                    ->shouldReceive('resolve')
-                    ->once()
-                    ->andReturn($eTag);
-            })
-        );
-
-        return $eTag;
     }
 }

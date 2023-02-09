@@ -2,6 +2,7 @@
 
 namespace Datashaman\LaravelConditional\Tests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Mockery;
@@ -13,6 +14,7 @@ class IfModifiedSinceTest extends TestCase
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
         $response = $this->get('/test');
+        $response->assertStatus(Response::HTTP_OK);
         $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
@@ -24,7 +26,7 @@ class IfModifiedSinceTest extends TestCase
         $response = $this->withHeaders([
             'If-Modified-Since' => $lastModified->toRfc7231String(),
         ])->get('/test');
-        $response->assertStatus(304);
+        $response->assertStatus(Response::HTTP_NOT_MODIFIED);
 
         Event::assertNotDispatched(TestEvent::class);
     }
@@ -32,25 +34,13 @@ class IfModifiedSinceTest extends TestCase
     public function testModified()
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
-
-        $headers = [
+        $response = $this->withHeaders([
             'If-Modified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
-        ];
-
-        $response = $this
-            ->withHeaders($headers)
-            ->get('/test');
-
-        $response->assertStatus(200);
+        ])->get('/test');
+        $response->assertStatus(Response::HTTP_OK);
         $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Event::fake();
     }
 
     /**
@@ -85,22 +75,5 @@ class IfModifiedSinceTest extends TestCase
         $router->get('/test', function () {
             TestEvent::dispatch();
         })->name('test')->middleware('web');
-    }
-
-    public function returnLastModified(string $lastModified): Carbon
-    {
-        $lastModified = Carbon::parse($lastModified);
-
-        $this->instance(
-            LastModifiedResolver::class,
-            Mockery::mock(LastModifiedResolver::class, function (MockInterface $mock) use ($lastModified) {
-                $mock
-                    ->shouldReceive('resolve')
-                    ->once()
-                    ->andReturn($lastModified);
-            })
-        );
-
-        return $lastModified;
     }
 }
