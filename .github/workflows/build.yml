@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         illuminate-version:
+          - 8
           - 9
         php-version:
           - 8.0
