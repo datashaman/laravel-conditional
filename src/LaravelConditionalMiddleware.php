@@ -86,7 +86,7 @@ class LaravelConditionalMiddleware
         $response = $next($request);
 
         if ($processETag) {
-            $response->header('ETag', $eTag);
+            $response->header('ETag', json_encode($eTag));
         }
 
         if ($processLastModified) {
@@ -105,8 +105,9 @@ class LaravelConditionalMiddleware
         }
 
         $found = collect(explode(',', $header))
-            ->map(fn ($tag) => trim($tag, "\" \n\r\t\v\x00"))
+            ->map('trim')
             ->reject(fn ($tag) => Str::startsWith($tag, 'W/'))
+            ->map(fn ($tag) => trim($tag, '"'))
             ->search($eTag);
 
         return $found !== false;

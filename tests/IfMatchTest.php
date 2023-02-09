@@ -12,7 +12,7 @@ class IfMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->get('/test');
-        $response->assertHeader('ETag', $eTag);
+        $response->assertHeader('ETag', json_encode($eTag));
 
         Event::assertDispatched(TestEvent::class);
     }
