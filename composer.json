@@ -12,13 +12,13 @@
     "homepage": "https://github.com/datashaman/laravel-conditional",
     "keywords": ["Laravel", "LaravelConditional"],
     "require": {
-        "illuminate/support": "^9"
+        "illuminate/support": "^8|^9"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5.10",
-        "orchestra/testbench": "~7",
-        "nunomaduro/collision": "^6.2",
-        "tightenco/tlint": "^8.0"
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^6|^7",
+        "nunomaduro/collision": "^5|^6",
+        "tightenco/tlint": "^8"
     },
     "autoload": {
         "psr-4": {
