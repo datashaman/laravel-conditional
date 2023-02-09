@@ -12,7 +12,7 @@ class IfNoneMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->get('/test');
-        $response->assertHeader('ETag', $eTag);
+        $response->assertHeader('ETag', json_encode($eTag));
 
         Event::assertDispatched(TestEvent::class);
     }
@@ -35,7 +35,7 @@ class IfNoneMatchTest extends TestCase
             'If-None-Match' => '1234567',
         ])->get('/test');
         $response->assertStatus(200);
-        $response->assertHeader('ETag', $eTag);
+        $response->assertHeader('ETag', json_encode($eTag));
 
         Event::assertDispatched(TestEvent::class);
     }
