@@ -29,5 +29,12 @@
         "psr-4": {
             "Datashaman\\LaravelConditional\\Tests\\": "tests/"
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Datashaman\\LaravelConditional\\LaravelConditionalServiceProvider"
+            ]
+        }
     }
 }
