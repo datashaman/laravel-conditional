@@ -4,8 +4,6 @@ namespace Datashaman\LaravelConditional\Tests;
 
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
-use Mockery;
-use Mockery\MockInterface;
 
 class IfNoneMatchTest extends TestCase
 {

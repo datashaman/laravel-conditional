@@ -3,10 +3,7 @@
 namespace Datashaman\LaravelConditional\Tests;
 
 use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
-use Mockery;
-use Mockery\MockInterface;
 
 class IfModifiedSinceTest extends TestCase
 {
