@@ -2,10 +2,8 @@
 
 namespace Datashaman\LaravelConditional\Tests;
 
-use Illuminate\Support\Carbon;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
-use Mockery;
-use Mockery\MockInterface;
 
 class IfUnmodifiedSinceTest extends TestCase
 {
@@ -15,7 +13,7 @@ class IfUnmodifiedSinceTest extends TestCase
         $response = $this->withHeaders([
             'If-Unmodified-Since' => $lastModified->toRfc7231String(),
         ])->post('/test');
-        $response->assertStatus(200);
+        $response->assertStatus(Response::HTTP_OK);
         $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
 
         Event::assertDispatched(TestEvent::class);
@@ -27,15 +25,9 @@ class IfUnmodifiedSinceTest extends TestCase
         $response = $this->withHeaders([
             'If-Unmodified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
         ])->postJson('/test');
-        $response->assertStatus(412);
+        $response->assertStatus(Response::HTTP_PRECONDITION_FAILED);
 
         Event::assertNotDispatched(TestEvent::class);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Event::fake();
     }
 
     /**
@@ -70,22 +62,5 @@ class IfUnmodifiedSinceTest extends TestCase
         $router->post('/test', function () {
             TestEvent::dispatch();
         })->name('test')->middleware('web');
-    }
-
-    public function returnLastModified(string $lastModified): Carbon
-    {
-        $lastModified = Carbon::parse($lastModified);
-
-        $this->instance(
-            LastModifiedResolver::class,
-            Mockery::mock(LastModifiedResolver::class, function (MockInterface $mock) use ($lastModified) {
-                $mock
-                    ->shouldReceive('resolve')
-                    ->once()
-                    ->andReturn($lastModified);
-            })
-        );
-
-        return $lastModified;
     }
 }

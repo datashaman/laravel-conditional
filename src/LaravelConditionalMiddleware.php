@@ -5,6 +5,7 @@ namespace Datashaman\LaravelConditional;
 use Closure;
 use Exception;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -42,7 +43,15 @@ class LaravelConditionalMiddleware
     public function handle($request, Closure $next)
     {
         $route = $request->route();
-        $routeName = $route ? $route->getName() : '';
+
+        if ($route instanceof Route) {
+            $routeName = $route->getName() ?? '';
+        } elseif (is_string($route)) {
+            $routeName = $route;
+        } else {
+            throw new Exception('Not sure what to do with this route');
+        }
+
         $definition = $routeName ? Arr::get($this->resolverIndex, $routeName) : [];
 
         $processETag = Arr::has($definition, 'etag');
@@ -109,7 +118,7 @@ class LaravelConditionalMiddleware
         }
 
         $found = collect(explode(',', $header))
-            ->map('trim')
+            ->map(fn ($tag) => trim($tag))
             ->reject(fn ($tag) => Str::startsWith($tag, 'W/'))
             ->map(fn ($tag) => trim($tag, '"'))
             ->search($eTag);
