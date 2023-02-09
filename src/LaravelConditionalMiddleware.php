@@ -50,19 +50,13 @@ class LaravelConditionalMiddleware
         if ($processETag) {
             $eTag = resolve($definition['etag'])->resolve($request);
 
-            $ifMatchHeader = $request->header('If-Match');
-
-            if (
-                $ifNoneMatchHeader = $request->header('If-None-Match')
-                && $this->matchETag($eTag, $ifNoneMatchHeader)
-            ) {
+            $ifNoneMatchHeader = $request->header('If-None-Match');
+            if ($ifNoneMatchHeader && $this->matchETag($eTag, $ifNoneMatchHeader)) {
                 return response('', Response::HTTP_NOT_MODIFIED);
             }
 
-            if (
-                $ifMatchHeader = $request->header('If-Match')
-                && !$this->matchETag($eTag, $ifMatchHeader)
-            ) {
+            $ifMatchHeader = $request->header('If-Match');
+            if ($ifMatchHeader && !$this->matchETag($eTag, $ifMatchHeader)) {
                 return response('', Response::HTTP_PRECONDITION_FAILED);
             }
         }
@@ -73,7 +67,6 @@ class LaravelConditionalMiddleware
             $lastModified = resolve($definition['last_modified'])->resolve($request);
 
             $ifModifiedSinceHeader = $request->header('If-Modified-Since');
-
             if ($ifModifiedSinceHeader) {
                 $ifModifiedSince = Carbon::parse($ifModifiedSinceHeader);
                 if ($lastModified <= $ifModifiedSince) {
@@ -82,7 +75,6 @@ class LaravelConditionalMiddleware
             }
 
             $ifUnmodifiedSinceHeader = $request->header('If-Unmodified-Since');
-
             if ($ifUnmodifiedSinceHeader) {
                 $ifUnmodifiedSince = Carbon::parse($ifUnmodifiedSinceHeader);
                 if ($lastModified > $ifUnmodifiedSince) {

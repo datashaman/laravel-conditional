@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\MockInterface;
 
-class IfMatchTest extends TestCase
+class IfNoneMatchTest extends TestCase
 {
     public function testNoHeader()
     {
@@ -21,28 +21,23 @@ class IfMatchTest extends TestCase
     {
         $eTag = $this->returnETag('abcdefg');
         $response = $this->withHeaders([
-            'If-Match' => $eTag,
+            'If-None-Match' => $eTag,
         ])->get('/test');
-        $response->assertStatus(200);
+        $response->assertStatus(304);
 
-        Event::assertDispatched(TestEvent::class);
+        Event::assertNotDispatched(TestEvent::class);
     }
 
     public function testNoneMatch()
     {
         $eTag = $this->returnETag('abcdefg');
+        $response = $this->withHeaders([
+            'If-None-Match' => '1234567',
+        ])->get('/test');
+        $response->assertStatus(200);
+        $response->assertHeader('ETag', $eTag);
 
-        $headers = [
-            'If-Match' => '1234567',
-        ];
-
-        $response = $this
-            ->withHeaders($headers)
-            ->get('/test');
-
-        $response->assertStatus(412);
-
-        Event::assertNotDispatched(TestEvent::class);
+        Event::assertDispatched(TestEvent::class);
     }
 
     protected function setUp(): void

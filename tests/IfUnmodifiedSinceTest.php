@@ -24,16 +24,9 @@ class IfUnmodifiedSinceTest extends TestCase
     public function testModified()
     {
         $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
-
-        $headers = [
+        $response = $this->withHeaders([
             'If-Unmodified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
-        ];
-
-        $response = $this
-            ->withHeaders($headers)
-            ->postJson('/test');
-
-        $response->dump();
+        ])->postJson('/test');
         $response->assertStatus(412);
 
         Event::assertNotDispatched(TestEvent::class);
