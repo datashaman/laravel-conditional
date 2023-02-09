@@ -25,9 +25,39 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app)
     {
+        parent::defineEnvironment($app);
+
         $app->setBasePath(__DIR__ . '/..');
+
+        $app['config']->set('laravel-conditional', [
+            'definitions' => [
+                [
+                    'routes' => [
+                        'resource.show',
+                        'resource.update',
+                    ],
+                ],
+            ],
+        ]);
     }
 
+    /**
+     * Define routes setup.
+     *
+     * @param  \Illuminate\Routing\Router  $router
+     *
+     * @return void
+     */
+    protected function defineRoutes($router)
+    {
+        $router->get('/resource', function () {
+            TestEvent::dispatch();
+        })->name('resource.show')->middleware('web');
+
+        $router->put('/resource', function () {
+            TestEvent::dispatch();
+        })->name('resource.update')->middleware('web');
+    }
     /**
      * Resolve application HTTP Kernel implementation.
      *
