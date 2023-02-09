@@ -2,38 +2,44 @@
 
 namespace Datashaman\LaravelConditional\Tests;
 
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\MockInterface;
 
-class IfUnmodifiedSinceTest extends TestCase
+class IfMatchTest extends TestCase
 {
-    public function testUnmodified()
+    public function testNoHeader()
     {
-        $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
-        $response = $this->withHeaders([
-            'If-Unmodified-Since' => $lastModified->toRfc7231String(),
-        ])->post('/test');
-        $response->assertStatus(200);
-        $response->assertHeader('Last-Modified', $lastModified->toRfc7231String());
+        $eTag = $this->returnETag('abcdefg');
+        $response = $this->get('/test');
+        $response->assertHeader('ETag', $eTag);
 
         Event::assertDispatched(TestEvent::class);
     }
 
-    public function testModified()
+    public function testMatch()
     {
-        $lastModified = $this->returnLastModified('Fri, 01 Feb 2019 03:45:27 GMT');
+        $eTag = $this->returnETag('abcdefg');
+        $response = $this->withHeaders([
+            'If-Match' => $eTag,
+        ])->getJson('/test');
+        $response->assertStatus(200);
+
+        Event::assertDispatched(TestEvent::class);
+    }
+
+    public function testNoneMatch()
+    {
+        $eTag = $this->returnETag('abcdefg');
 
         $headers = [
-            'If-Unmodified-Since' => $lastModified->copy()->subDays(1)->toRfc7231String(),
+            'If-Match' => '1234567',
         ];
 
         $response = $this
             ->withHeaders($headers)
-            ->postJson('/test');
+            ->get('/test');
 
-        $response->dump();
         $response->assertStatus(412);
 
         Event::assertNotDispatched(TestEvent::class);
@@ -58,7 +64,7 @@ class IfUnmodifiedSinceTest extends TestCase
         $app['config']->set('laravel-conditional', [
             'definitions' => [
                 [
-                    'last_modified' => LastModifiedResolver::class,
+                    'etag' => ETagResolver::class,
                     'routes' => 'test',
                 ],
             ],
@@ -74,25 +80,23 @@ class IfUnmodifiedSinceTest extends TestCase
      */
     protected function defineRoutes($router)
     {
-        $router->post('/test', function () {
+        $router->get('/test', function () {
             TestEvent::dispatch();
         })->name('test')->middleware('web');
     }
 
-    public function returnLastModified(string $lastModified): Carbon
+    public function returnETag(string $eTag): string
     {
-        $lastModified = Carbon::parse($lastModified);
-
         $this->instance(
-            LastModifiedResolver::class,
-            Mockery::mock(LastModifiedResolver::class, function (MockInterface $mock) use ($lastModified) {
+            ETagResolver::class,
+            Mockery::mock(ETagResolver::class, function (MockInterface $mock) use ($eTag) {
                 $mock
                     ->shouldReceive('resolve')
                     ->once()
-                    ->andReturn($lastModified);
+                    ->andReturn($eTag);
             })
         );
 
-        return $lastModified;
+        return $eTag;
     }
 }
