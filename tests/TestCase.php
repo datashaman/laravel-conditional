@@ -69,7 +69,7 @@ abstract class TestCase extends OrchestraTestCase
         $app->singleton(KernelContract::class, Kernel::class);
     }
 
-    public function returnETag(string $eTag): string
+    public function returnETag(?string $eTag): ?string
     {
         $this->instance(
             ETagResolver::class,

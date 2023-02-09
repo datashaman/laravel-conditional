@@ -109,8 +109,12 @@ class LaravelConditionalMiddleware
         return $response;
     }
 
-    protected function matchETag(string $eTag, string $header): bool
+    protected function matchETag(?string $eTag, string $header): bool
     {
+        if (!$eTag) {
+            return false;
+        }
+
         $header = trim($header);
 
         if ($header === '*') {
