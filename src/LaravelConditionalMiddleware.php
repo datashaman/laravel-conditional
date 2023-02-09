@@ -52,7 +52,11 @@ class LaravelConditionalMiddleware
 
             $ifNoneMatchHeader = $request->header('If-None-Match');
             if ($ifNoneMatchHeader && $this->matchETag($eTag, $ifNoneMatchHeader)) {
-                return response('', Response::HTTP_NOT_MODIFIED);
+                $statusCode = $request->isMethodCacheable()
+                    ? Response::HTTP_NOT_MODIFIED
+                    : Response::HTTP_PRECONDITION_FAILED;
+
+                return response('', $statusCode);
             }
 
             $ifMatchHeader = $request->header('If-Match');
